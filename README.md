@@ -11,7 +11,7 @@ representation of the molecule.
 The following will install both the `x2z` executable and the `pyx2z` Python
 module.
 ```
-git clone --recurse-submodules https://github.com/PACChem/x2z
+git clone https://github.com/PACChem/x2z
 cd x2z
 cmake .
 sudo make install
