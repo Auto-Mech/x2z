@@ -11,10 +11,16 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 /*********************** Atomic coordinates accuracies *******************/
 
 extern double angle_tolerance, distance_tolerance;
+
+// incipient bond
+//
+extern std::set<std::set<int> > incipient_bond;
+
 
 bool are_angles_equal (double, double);
 
@@ -58,7 +64,9 @@ private:
   double _dm [3]; // distance matrix of first three atoms
 
 public:
-  MolecOrient (const MolecGeom&) ; 
+  //
+  MolecOrient (const MolecGeom&);
+  
   operator MolecGeom () const { return *this; }
 
   int  sym_num       () const ;
@@ -69,12 +77,10 @@ public:
   int size () const { return MolecGeom::size(); }
   const Atom& operator [] (int i) const { return MolecGeom::operator[](i); }
 
-  friend int compare (const MolecOrient&, const MolecOrient&, MolecOrient::mode_t) 
-    ;
+  friend int compare (const MolecOrient&, const MolecOrient&, MolecOrient::mode_t);
 };
 
-int compare (const MolecOrient&, const MolecOrient&, MolecOrient::mode_t)
-    ;
+int compare (const MolecOrient&, const MolecOrient&, MolecOrient::mode_t);
 
 // connection graph
 //
@@ -87,6 +93,10 @@ public:
   explicit PrimStruct (const MolecGeom&) ;
   
   const Atom& operator [] (int i) const { return MolecGeom::operator[](i); }
+
+  int valence (int i) const { return (*this)[i].valence(); }
+  
+  const char* atom_name (int i) const { return (*this)[i].name(); }
   
   int size () const { return MolecGeom::size(); }
 
@@ -129,6 +139,21 @@ struct ConRec {
   ConRec (int a, int c) : atom(a), cref(c), begin(-1), end(-1), attr(GEN_BOND) {}
 };
 
+struct BetaData {
+  //
+  int radical;     // radical site
+  int primary;     // primary site connected to radical one
+  int secondary;   // secondary site connected to primary one
+  bool isring;     // is the bond in the ring structure
+
+  BetaData () : radical(-1), primary(-1), secondary(-1), isring(false) {}
+
+  operator bool () const { if(radical < 0) return false; return true; }
+
+  std::set<int> bond () const { std::set<int> res; res.insert(primary); res.insert(secondary); return res; }
+  
+};
+  
 // molecular structure
 //
 class MolecStruct : public PrimStruct
@@ -141,7 +166,7 @@ class MolecStruct : public PrimStruct
   
   std::map<int, std::list<std::list<int> > > _rotvar; // rotational bonds
   
-  std::vector<int> _betvar; // beta-scission bonds
+  std::map<int, BetaData> _betvar; // beta-scission bonds
   
   MultiArray<double>  _coval; // initial values of z-matrix coordinates
 
@@ -161,30 +186,25 @@ public:
 
   explicit MolecStruct (const PrimStruct&) ;
 
-  unsigned  bond_order (int, int, int) const;
-  double    bond_order (int, int)      const;
-
   int resonance_count () const { return _resonance.size(); }
 
-
   std::vector<int> atom_ordering() const;
+ 
+  double bond_order (int, int) const;
   
-  void set_bond_order (int i, int j, unsigned order, int bs =0) ;
-  void remove_resonance (int i) ;
-  void add_resonance ();
-  
-  void add_resonance (const ConMat<unsigned>&) ;
   void print (std::ostream&, const std::string& = std::string()) const;
 
   bool is_single  (int at0, int at1) const ;
-  bool is_beta    (int at0, int at1) const ;
+
+  BetaData is_beta    (int at0, int at1) const ;
+
   bool is_radical (int at)           const;
 
   const std::string&            zmatrix () const { return _zmat; }
   
   const std::map<int, std::list<std::list<int> > >& rotation_bond () const { return _rotvar; }
   
-  const std::vector<int>&     beta_bond () const { return _betvar; }
+  const std::map<int, BetaData>&     beta_bond () const { return _betvar; }
   const std::list<int>&       const_var () const { return _constvar; }
 
   const MultiArray<double>&          zmat_coval () const { return _coval; }

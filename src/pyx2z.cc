@@ -126,7 +126,7 @@ PYBIND11_MODULE(pyx2z, module) {
         .def("bond_order",
              (unsigned (MolecStruct::*)(int, int, int) const)
              &MolecStruct::bond_order)
-        .def("resonance_count", &MolecStruct::resonance_count)
+        // .def("resonance_count", &MolecStruct::resonance_count)
         .def("is_radical", &MolecStruct::is_radical);
     module.def("zmatrix_string", &zmatrix_string);
     module.def("rotational_bond_coordinates", &rotational_bond_coordinates);
