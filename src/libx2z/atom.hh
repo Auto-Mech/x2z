@@ -2,6 +2,7 @@
 #define ATOM_HH
 
 #include "d3.hh"
+#include "units.hh"
 #include <iomanip>
 
 /*************************** Atom description ***************************/
@@ -22,12 +23,7 @@ public:
     SULFUR = 16,
     CHLORINE = 17,
     TITANIUM = 22,
-    BROMINE = 35,
-    HELIUM = 2,
-    NEON = 10,
-    ARGON = 18,
-    KRYPTON = 36,
-    XENON = 54
+    BROMINE = 35
   };
 
 private:
@@ -62,6 +58,8 @@ public:
   bool operator<  (const AtomBase& a) const;
   bool operator>  (const AtomBase& a) const;
 };
+
+double atomic_radius (const AtomBase& a);
 
 inline bool AtomBase::operator< (const AtomBase& a) const 
 { 
@@ -103,8 +101,11 @@ inline std::istream& operator>> (std::istream& from, Atom& a)
 inline std::ostream& operator<< (std::ostream& out , const Atom& a)
 {
     out << std::setw(2) << a.name();
+    
     for(int i = 0; i < 3; ++i)
-	out << std::setw(15) << a[i];
+      //
+      out << std::setw(15) << a[i] * Phys_const::bohr;
+    
     return out;
 }
 

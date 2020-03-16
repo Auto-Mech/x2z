@@ -14,6 +14,8 @@ double angle_tolerance = 5.0;
 
 double distance_tolerance = 0.05;
 
+std::set<std::set<int> > incipient_bond;
+
 bool are_angles_equal (double a1, double a2)
 {
   double da = a2 - a1;
@@ -40,10 +42,9 @@ bool are_distances_equal (double a1, double a2)
 
 double max_bond_length(const AtomBase& a1, const AtomBase& a2)
 {
-  if(a1 == AtomBase::HYDROGEN || a2 == AtomBase::HYDROGEN)
-    return 2.6;
-  
-  return 3.5;
+  double res = atomic_radius(a1) + atomic_radius(a2);
+
+  return 1.2 * res / Phys_const::bohr;
 }
 
 void MolecGeom::operator *= (const D3::Matrix& r)
@@ -119,7 +120,7 @@ MolecOrient::MolecOrient (const MolecGeom& m)  : MolecGeom(m)
   // is geometry linear?
   istart = true;
   for(int at = 2; at < size(); ++at) {
-    dtemp = std::abs(90. - angle(m1[1], m1[0], m1[at]));
+    dtemp = std::fabs(90. - angle(m1[1], m1[0], m1[at]));
     if(istart || dtemp < min_val) {
       istart = false;
       min_ind = at;
@@ -151,32 +152,56 @@ MolecOrient::MolecOrient (const MolecGeom& m)  : MolecGeom(m)
     my_sort(coor, perm);
 
     MolecGeom m(size());
+    
     for(int at = 0; at < size(); ++at)
+      //
       m[at] = m1[perm[at]];
+    
     m1 = m;
+
+    /*
+      std::cout << funame << "x-coordinates:";
+
+    for(int a = 0; a < size(); ++a)
+      //
+      std::cout << "   " << m1[a][0];
+
+    std::cout << "\n";
+    */
+    
     return;
   }
 		
   /************************* Nonlinear geometry **************************/
 
   // change atoms order
+  //
   if(min_ind != 2)
+    //
     std::swap(m1[2], m1[min_ind]);
 
   m1 *= D3::Matrix(m1[1], m1[2]); // standard orientation
 
   // reference atoms distance matrix
+  //
   for(int i = 0; i < 3; ++i)
+    //
     _dm[i] = vdistance(m1[(i+1)%3], m1[(i+2)%3]);
 
   // is molecule plane?
+  //
   _mt = PLANE;
-  if(size() == 3) {
+  
+  if(size() == 3)
+    //
     return;
-  }
-  for(int at = 3; at < size(); ++at)
-    if(!are_distances_equal(m1[at][2], 0.)) {
+
+  for(int a = 3; a < size(); ++a)
+    //
+    if(!are_distances_equal(m1[a][2], 0.)) {
+      //
       _mt = NONLINEAR;
+      
       break;
     }
 } 
@@ -189,10 +214,14 @@ int  MolecOrient::sym_num () const
 bool MolecOrient::is_enantiomer () const 
 {
   if(_mt == NONLINEAR) {
+    //
     MolecGeom m = *this;
+    
     m *= -1.;
+    
     return !compare(*this, MolecOrient(m), TEST);
   }
+  
   return false;
 }
 
@@ -201,23 +230,23 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 {
   const char funame [] = "MolecOrient::compare: ";
 
-  int itemp;
+  int    itemp;
   double dtemp;
-  bool btemp;
-
-  int min_ind;
-  double min_val;
-  bool istart;
+  bool   btemp;
 
   if(m1.size() < 2 || m2.size() < 2) {
-    std::cout << funame << "wrong number of atoms\n";
+    //
+    std::cerr << funame << "wrong number of atoms\n";
+    
     throw Error::Range();
   }
 
   if(m1.size() != m2.size())
+    //
     return 0;
     
   if(m1._mt != m2._mt)
+    //
     return 0;
 
   int result = 0;
@@ -225,26 +254,40 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
   /************************ Linear geometry ************************/
 
   if(m1._mt == MolecOrient::LINEAR) {
+    //
     btemp = true;
-    for(int at = 0; at < m1.size(); ++at)
-      if(m1[at] != m2[at] || !are_distances_equal(m1[at][0], m2[at][0])) {
+    
+    for(int at = 1; at < m1.size(); ++at)
+      //
+      if(m1[at] != m2[at] || !are_distances_equal(m1[at][0] - m1[0][0], m2[at][0] - m2[0][0])) {
+	//
 	btemp = false;
+
 	break;
       }
+    
     if(btemp) {
+      //
       ++result;
+      
       if(mode == MolecOrient::TEST)
+	//
 	return 1;
     }
 
     btemp = true;
-    for(int at = 0; at < m1.size(); ++at)
-      if(m1[at] != m2[m1.size()-at-1] || 
-	 !are_distances_equal(m1[at][0], m2[m1.size()-1][0] - m2[m1.size()-at-1][0])) {
+    
+    for(int at = 1; at < m1.size(); ++at)
+      //
+      if(m1[at] != m2[m1.size() - at - 1] || !are_distances_equal(m1[at][0] - m1[0][0], m2[m1.size() - 1][0] - m2[m1.size() - at - 1][0])) {
+	//
 	btemp = false;
+	
 	break;
       }
+    
     if(btemp)
+      //
       ++result;
 
     return result;
@@ -264,6 +307,8 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 
   // three reference atoms cycle
   //
+  int count = 0;
+  
   for(int at0 = 0; at0 < m2.size(); ++at0) {
     //
     for(int at1 = 0; at1 < m2.size(); ++at1) {
@@ -308,7 +353,7 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 	
 	for(int i = 0; i < 3; ++i)
 	  //
-	  dm2[i] = tdm(perm[(i+1)%3], perm[(i+2)%3]);
+	  dm2[i] = tdm(perm[(i + 1) % 3], perm[(i + 2) % 3]);
 
 	btemp = false;
 	//
@@ -328,29 +373,52 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 
 	// standard orientation
 	//
-	MolecGeom nm(m2);
-	
+	MolecGeom nm = m2;
+
 	nm -= m2[perm[0]];
-	
+
 	nm *= D3::Matrix(nm[perm[1]], nm[perm[2]]);
 
-	bool is_equal = true;
+	/*
+	std::cout << "\n";
+	
+	for(int i = 0; i < 3; ++i)
+	  //
+	  std::cout << std::setw(3) << perm[i];
+	
+	std::cout << "\n";
+	  
+	for(int a = 0; a < m1.size(); ++a)
+	  //
+	  std::cout << m1[a] << "\n";
+	
+	std::cout << "\n";
+		
+	for(int a = 0; a < nm.size(); ++a)
+	  //
+	  std::cout << nm[a] << "\n";
+	
+	std::cout << "\n";
+		
+	*/
 	
 	// checking if the rest of the atoms coincide
 	//
 	for(int rest = 3; rest < m1.size(); ++rest) {
 	  //
-	  istart = true;
-
-	  //finding matching atom
+	  int    match = -1;
+	  
+	  double min_dist;
+  
+	  // best matching atom
 	  //
-	  for(int match = 0; match < nm.size(); ++match) {
+	  for(int test = 0; test < nm.size(); ++test) {
 	    //
 	    btemp = false;
 	    
 	    for(int i = 0; i < perm.size(); ++i) {
 	      //
-	      if(match == perm[i]) {
+	      if(test == perm[i]) {
 		//
 		btemp = true;
 		
@@ -362,46 +430,46 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 	      //
 	      continue;
 	    
-	    if(m1[rest] != nm[match])
+	    if(m1[rest] != nm[test])
 	      //
 	      continue;
 	    
-	    dtemp = vdistance(m1[rest], nm[match]);
+	    dtemp = vdistance(m1[rest], nm[test]);
 	    
-	    if(istart || dtemp < min_val) {
+	    if(match < 0 || dtemp < min_dist) {
 	      //
-	      istart = false;
+	      min_dist = dtemp;
 	      
-	      min_val = dtemp;
-	      
-	      min_ind = match;
+	      match = test;
 	    }
 	    //
-	  } // finding matching atom
+	  }// best matching atom
  
 	  // different stoichiometry
 	  //
-	  if(istart) {
+	  if(match < 0) {
 	    //
+	    std::cerr << funame << "different stoichiometry\n";
+	    
 	    return 0;
 	  }
 
 	  // geometries differ
 	  //
-	  if(!are_distances_equal(min_val, 0.)) {
+	  if(!are_distances_equal(min_dist, 0.)) {
 	    //
-	    is_equal = false;
+	    //std::cout << "atom = " << rest << " best match = " << match << " distance = " << min_dist << "\n\n";
 	    
 	    break;
 	  }
 	  
-	  perm.push_back(min_ind);
+	  perm.push_back(match);
 	  //
 	} // checking the rest of atoms
 
 	// geometries are identical
 	//
-	if(is_equal) {
+	if(perm.size() == m1.size()) {
 	  //
 	  if(mode == MolecOrient::TEST) {
 	    //
@@ -411,15 +479,18 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
 	    //
 	    ++result;
 	}
-      }
-    }
+	
+      }//
+      //
+    }//
     //
-  } // three reference atoms cycle
+  }// reference atoms cycle
   
   return result;
 }
 
-PrimStruct::PrimStruct (const MolecGeom& g) 
+PrimStruct::PrimStruct (const MolecGeom& g)
+  //
   : ConMat<unsigned>(g.size()), MolecGeom(g), _la(g.size(), false)
 {
   const char funame [] = "PrimStruct::PrimStruct(const MolecGeom&): ";
@@ -439,9 +510,16 @@ PrimStruct::PrimStruct (const MolecGeom& g)
   
   for(int i = 0; i < size(); ++i) {
     //
-    for(int j = i + 1; j < size(); ++j) {
+    for(int j = 0; j < i; ++j) {
       //
-      if(vdistance(g[i], g[j]) < max_bond_length(g[i], g[j])) {
+      // bond
+      //
+      std::set<int> bond;
+
+      bond.insert(i);
+      bond.insert(j);
+      
+      if(vdistance(g[i], g[j]) < max_bond_length(g[i], g[j]) || incipient_bond.find(bond) != incipient_bond.end()) {
 	//
 	(*this)(i, j) = 1;
       }
@@ -464,21 +542,21 @@ PrimStruct::PrimStruct (const MolecGeom& g)
     //
     if((*this)[i] == AtomBase::HYDROGEN && row_sum(i) > 1) {
       //
-      std::cerr << funame << "WARNING: " << i << "-th hydrogen has more than one bond\n";
+      std::cerr << funame << "WARNING: " << i << "-th hydrogen has more than one connection\n";
     }
 
     // check the number of bonds
     //
     if(row_sum(i) > 4) {
       //
-      std::cerr << funame << "WARNING: " << i << "-th atom has more than four bonds\n";
+      std::cerr << funame << "WARNING: " << i << "-th atom has more than four connections\n";
     }
     
     // check that oxygens have <= 2 connections
     //
     if((*this)[i] == AtomBase::OXYGEN && row_sum(i) > 2) {
       //
-      std::cerr << funame << "WARNING: " << i << "-th oxygen has more than two bonds\n";
+      std::cerr << funame << "WARNING: " << i << "-th oxygen has more than two connections\n";
     }
   }
 
@@ -601,7 +679,7 @@ std::string PrimStruct::group_stoicheometry (const std::list<int>& group) const
 
   for(std::list<int>::const_iterator git = group.begin(); git != group.end(); ++git)
     //
-    ++st[(*this)[*git].name()];
+    ++st[atom_name(*git)];
 
   std::ostringstream res;
   //
@@ -664,7 +742,24 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
   double dtemp;
   bool   btemp;
   
-  const PrimStruct& m = *this;
+  ConMat<unsigned> m = prim;
+
+  for(int i = 0; i < size(); ++i)
+    //
+    for(int j = 0; j < i; ++j)
+      //
+      if(m(i, j)) {
+	//
+	std::set<int> bond;
+
+	bond.insert(i);
+	
+	bond.insert(j);
+
+	if(incipient_bond.find(bond) == incipient_bond.end())
+	  //
+	  m(i, j) = 2;
+      }
 
   // checking if the primary structure is sound
   //
@@ -677,9 +772,9 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
 
   for(int i = 0; i < size(); ++i) {
     //
-    if(m.row_sum(i) > m[i].valence()) {
+    if(m.row_sum(i) > 2 * valence(i)) {
       //
-      std::cout << funame << i << "-th " << m[i].name() << " atom real valence exceeds its formal valence\n";
+      std::cout << funame << i << "-th " << atom_name(i) << " atom real valence exceeds its formal valence\n";
       
       throw Error::Range();
     }
@@ -687,41 +782,30 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
   
   // getting all bonding configurations (resonances)
   //
-  std::vector<ConMat<unsigned> > new_res;
-  
-  std::vector<unsigned> real_valence(size());
-  
   _resonance.push_back(m);
 
-  // bonding cycle
+  // bond increment cycle
   //
   while(1) {
     //
-    new_res.clear();
+    std::vector<ConMat<unsigned> > update;
     
-    for(int s = 0; s < _resonance.size(); ++s) {
+    for(int r = 0; r < _resonance.size(); ++r)
       //
       for(int i = 0; i < size(); ++i)
 	//
-	real_valence[i] = _resonance[s].row_sum(i);
-
-      for(int i = 0; i < size(); ++i) {
-	//
-	for(int j = i + 1; j < size(); ++j) {
+	for(int j = 0; j < i; ++j)
 	  //
-	  if(m(i, j) && real_valence[i] < m[i].valence() && real_valence[j] < m[j].valence()) {
+	  if((*this)(i, j) && _resonance[r].row_sum(i) + 1 < 2 * valence(i) && _resonance[r].row_sum(j) + 1 < 2 * valence(j)) {
 	    //
-	    new_res.push_back(_resonance[s]);
+	    update.push_back(_resonance[r]);
 	    
-	    ++(*new_res.rbegin())(i, j);
+	    (*update.rbegin())(i, j) += 2;
 	  }
-	}
-      }
-    }
     
     // stop condition
     //
-    if(!new_res.size())
+    if(!update.size())
       //
       break;
 
@@ -729,13 +813,13 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
     //
     _resonance.clear();
     //
-    for(int s1 = 0; s1 < new_res.size(); ++s1) {
+    for(int r = 0; r < update.size(); ++r) {
       //
       bool btemp = true;
       
       for(int s = 0; s < _resonance.size(); ++s) {
 	//
-	if(_resonance[s] == new_res[s1]) {
+	if(_resonance[s] == update[r]) {
 	  //
 	  btemp = false;
 	  
@@ -745,9 +829,11 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
       
       if(btemp)
 	//
-	_resonance.push_back(new_res[s1]);
-    }
-  }// bonding cycle
+	_resonance.push_back(update[r]);
+      //
+    }//
+    //
+  }// bond increment cycle
 
   // first atom
   //
@@ -800,9 +886,11 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
 	
 	// beta bond attribute
 	//
-	if(is_beta(curr, prev)) {
+	BetaData beta = is_beta(curr, prev);
+	
+	if(beta) {
 	  //
-	  _betvar.push_back(_cpath.size());
+	  _betvar[_cpath.size()] = beta;
 	  
 	  crec.attr |= BET_BOND;
 	}
@@ -877,7 +965,7 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
     }
     else {
       //
-      to << std::setw(2) << (*this)[_cpath[ref0].atom].name();
+      to << std::setw(2) << atom_name(_cpath[ref0].atom);
     }
     
     // first reference (distance)
@@ -1128,16 +1216,16 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
 	      else if(prev == 1) {
 		//
 		_coval(DIHEDRAL, ref0) = angle((*this)[_cpath[ref0].atom], 
-						     (*this)[_cpath[ref1].atom],
-						     (*this)[_cpath[ref2].atom], 
-						     (*this)[_cpath[2   ].atom]);
+					       (*this)[_cpath[ref1].atom],
+					       (*this)[_cpath[ref2].atom], 
+					       (*this)[_cpath[2   ].atom]);
 	      }
 	      else {
 		//
 		_coval(DIHEDRAL, ref0) = angle((*this)[_cpath[ref0].atom],
-						     (*this)[_cpath[ref1].atom],
-						     (*this)[_cpath[ref2].atom],
-						     (*this)[_cpath[1   ].atom]);
+					       (*this)[_cpath[ref1].atom],
+					       (*this)[_cpath[ref2].atom],
+					       (*this)[_cpath[1   ].atom]);
 	      }
 	    }
 	  }
@@ -1230,9 +1318,10 @@ int MolecStruct::atom_map (int i) const
 void MolecStruct::print (std::ostream& to, const std::string& offset) const
 {
   const PrimStruct& m = *this;
+  
   double dtemp;
-  bool btemp;
-  int itemp;
+  bool   btemp;
+  int    itemp;
 
   int old_precision = to.precision(2);
 
@@ -1249,7 +1338,7 @@ void MolecStruct::print (std::ostream& to, const std::string& offset) const
 
   for(int i = 0; i < size(); ++i) {
     //
-    to << std::setw(3) <<  m[i].name();
+    to << std::setw(3) <<  atom_name(i);
 
     if(i < 9) {
       //
@@ -1264,7 +1353,7 @@ void MolecStruct::print (std::ostream& to, const std::string& offset) const
 
   for(int j = 0; j < size(); ++j) {
     //
-    to << offset << std::setw(4) << m[j].name();
+    to << offset << std::setw(4) << atom_name(j);
 
     if(j < 9) {
       //
@@ -1292,7 +1381,7 @@ void MolecStruct::print (std::ostream& to, const std::string& offset) const
 
     for(int r = 0; r < _resonance.size(); ++r) {
       //
-      if(_resonance[r].row_sum(rad) < m[rad].valence()) {
+      if(_resonance[r].row_sum(rad) < 2 * valence(rad)) {
 	//
 	btemp = true;
 
@@ -1309,13 +1398,13 @@ void MolecStruct::print (std::ostream& to, const std::string& offset) const
     to << offset << "Free radical: Radical sites are ";
     for(int i = 0; i < rs_vec.size(); ++i) {
       itemp = rs_vec[i];
-      to << m[itemp].name() << itemp + 1 << " ";
+      to << atom_name(itemp) << itemp + 1 << " ";
     }
   }
   else if(rs_vec.size() == 1) {
     itemp = rs_vec[0];
     to << offset << "Free radical: Radical site is "
-       << m[itemp].name() << itemp + 1 << " ";
+       << atom_name(itemp) << itemp + 1 << " ";
   }
   to << "\n\n";
 
@@ -1353,18 +1442,24 @@ std::vector<int> MolecStruct::atom_ordering() const
 }
 
 // check if the bond is single
+//
 bool MolecStruct::is_single (int at0, int at1) const 
 {
   const char funame [] = "MolecStruct::is_single: "; 
 
   if(!is_connected(at0, at1)) {
+    //
     std::cerr << funame << "no bond";
+
     throw Error::Logic();
   }
 
   for(int r = 0; r < _resonance.size(); ++r)
-    if(_resonance[r](at0, at1) > 1)
+    //
+    if(_resonance[r](at0, at1) > 2)
+      //
       return false;
+
   return true;
 }
 
@@ -1372,24 +1467,29 @@ bool MolecStruct::is_single (int at0, int at1) const
 bool MolecStruct::is_radical (int at) const
 {
   for(int r = 0; r < _resonance.size(); ++r)
-    if(_resonance[r].row_sum(at) < (*this)[at].valence())
+    //
+    if(_resonance[r].row_sum(at) < 2 * valence(at))
+      //
       return true;
+
   return false;
 }
 
-bool MolecStruct::is_beta (int at0, int at1) const 
+BetaData MolecStruct::is_beta (int at0, int at1) const 
 {
   // is the bond single one
   //
+  BetaData res;
+  
   if(!is_single(at0, at1))
     //
-    return false;
+    return res;
 
   // does the bond belong to a ring structure
   //
   if(is_ring(at0, at1))
     //
-    return false;
+    res.isring = true;
 
   // find if there is a radical site next to the bond
   //
@@ -1399,84 +1499,51 @@ bool MolecStruct::is_beta (int at0, int at1) const
       //
       continue;
     
-    if(!is_connected(rad, at0) && !is_connected(rad, at1))
+    if(!is_radical(rad))
       //
       continue;
-
-    if(is_radical(rad))
+    
+    if(is_connected(rad, at0)) {
       //
-      return true;
+      res.radical = rad;
+
+      res.primary = at0;
+
+      res.secondary = at1;
+
+      return res;
+    }
+    
+    if(is_connected(rad, at1)) {
+      //
+      res.radical = rad;
+
+      res.primary = at1;
+
+      res.secondary = at0;
+
+      return res;
+    }
   }
   
-  return false;
-}
-
-unsigned MolecStruct::bond_order (int i, int j, int s) const
-{
-  return _resonance[s](i, j);
-
+  return res;
 }
 
 double MolecStruct::bond_order (int i, int j) const
 {
   if(!(*this)(i,j))
+    //
     return 0.;
 
   double res = 0.;
+
   for(int r = 0; r < _resonance.size(); ++r)
+    //
     res += (double)_resonance[r](i, j);
-  res /= (double)_resonance.size();
+
+  res /= (double)_resonance.size() * 2.;
+
   return res;
-}
-
-void MolecStruct::set_bond_order (int i, int j, unsigned order, int s)
-  
-{
-  const char funame [] =  "MolecStruct::set_bond_order (int, int, unsigned, int): ";
-
-  if(!_resonance[s](i, j) || !order) {
-    std::cout << funame << "bond order should be non-zero\n";
-    throw Error::Range();
-  }
-
-  _resonance[s](i, j) = order;
-}
-
-void MolecStruct::remove_resonance (int i) 
-{
-  const char funame [] = "MolecStruct::remove_resonance(int): ";
-
-  if(_resonance.size() == 1) {
-    std::cout << funame << "cannot remove last structure\n";
-    throw Error::Range();
-  }
-    
-  _resonance.erase(_resonance.begin() + i);
-}
-
-void MolecStruct::add_resonance (const ConMat<unsigned>& cm) 
-{
-  const char funame [] = "MolecStruct::add_resonance (const ConMat<unsigned>&): ";
-
-  if(cm.size() != size()) {
-    std::cout << funame << "wrong dimension\n";
-    throw Error::Range();
-  }
-
-  for(int i = 0; i < size(); ++i)
-    for(int j = i+1; j < size(); ++j)
-      if(_resonance[0](i,j)  && !cm(i, j) ||
-	 !_resonance[0](i,j) &&  cm(i, j)) {
-	std::cout << funame << "wrong connection: (" << i << ", " << j << ")\n";
-	throw Error::Range();
-      }
-
-  for(int s = 0; s < _resonance.size(); ++s)
-    if(cm == _resonance[s]) {
-      std::cout << funame << "resonance structure already exists\n";
-      throw Error::Range();
-    }
-  _resonance.push_back(cm);
 }
 
 const char* MolecStruct::var_name (int v)

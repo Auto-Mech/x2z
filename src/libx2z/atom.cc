@@ -7,6 +7,70 @@
 
 /************************** Atom description ****************************/
 
+// atomic radius
+//
+double atomic_radius (const AtomBase& a)
+{
+  const char funame [] = "atomic_radius: ";
+  
+  switch(a.number()) {
+    //
+  case AtomBase::HYDROGEN:
+    //
+    return .25;
+    
+  case AtomBase::CARBON:
+    //
+    return 0.7;
+
+  case AtomBase::NITROGEN:
+    //
+    return 0.65;
+    
+  case AtomBase::OXYGEN:
+    //
+    return 0.6;
+    
+  case AtomBase::FLUORINE:
+    //
+    return 0.5;
+    
+  case AtomBase::SODIUM:
+    //
+    return 1.8;
+
+  case AtomBase::SILICON:
+    //
+    return 1.1;
+    
+  case AtomBase::PHOSPHORUS:
+    //
+    return 1.;
+    
+  case AtomBase::SULFUR:
+    //
+    return 1.;
+    
+  case AtomBase::CHLORINE:
+    //
+    return 1.;
+    
+  case AtomBase::TITANIUM:
+    //
+    return 1.4;
+    
+  case AtomBase::BROMINE:
+    //
+    return 1.15;
+    
+  default:
+    //
+    std::cerr << funame << "not implemented for " << a.name() << "\n";
+    
+    throw Error::Range();
+  }
+}
+
 const char* AtomBase::name() const 
 {
   const char funame [] = "AtomBase::name: ";
@@ -36,16 +100,6 @@ const char* AtomBase::name() const
     return "Ti";
   case BROMINE:
     return "Br";
-  case HELIUM:
-    return "He";
-  case NEON:
-    return "Ne";
-  case ARGON:
-    return "Ar";
-  case KRYPTON:
-    return "Kr";
-  case XENON:
-    return "Xe";
   case DUMMY:
     return "X";
   default:
@@ -84,16 +138,6 @@ void AtomBase::_str2num(const std::string& name)
     _num = TITANIUM;
   else if (name == "Br")
     _num = BROMINE;
-  else if (name == "He")
-    _num = HELIUM;
-  else if (name == "Ne")
-    _num = NEON;
-  else if (name == "Ar")
-    _num = ARGON;
-  else if (name == "Kr")
-    _num = KRYPTON;
-  else if (name == "Xe")
-    _num = XENON;
   else {
     std::cerr << funame << "unknown atom name "  << name << "\n";
     throw Error::Range();
@@ -133,16 +177,6 @@ int AtomBase::_default_isot () const
     return 49;
   case BROMINE:
     return 79;
-  case HELIUM:
-    return 4;
-  case NEON:
-    return 20;
-  case ARGON:
-    return 40;
-  case KRYPTON:
-    return  84;
-  case XENON:
-    return 131;
   default:
     std::cerr << funame << "unknown atomic number " << _num << "\n";
     throw Error::Range();
@@ -257,56 +291,6 @@ double AtomBase::mass () const
       std::cerr << funame << "unknown isotope: " << _isot << "\n";
       throw Error::Range();
     }
-  case HELIUM:
-    switch(_isot) {
-    case 3: return Phys_const::amu * 3.01603;
-    case 4: return Phys_const::amu * 4.00260;
-    default:
-      std::cerr << funame << "unknown isotope: " << _isot << "\n";
-      throw Error::Range();
-    }
-  case NEON:
-    switch(_isot) {
-    case 20: return Phys_const::amu * 19.9924;
-    case 21: return Phys_const::amu * 20.9938;
-    case 22: return Phys_const::amu * 21.9914;
-    default:
-      std::cerr << funame << "unknown isotope: " << _isot << "\n";
-      throw Error::Range();
-    }
-  case ARGON:
-    switch(_isot) {
-    case 36: return Phys_const::amu * 35.9675;
-    case 38: return Phys_const::amu * 37.9627;
-    case 40: return Phys_const::amu * 39.9624;
-    default:
-      std::cerr << funame << "unknown isotope: " << _isot << "\n";
-      throw Error::Range();
-    }
-  case KRYPTON:
-    switch(_isot) {
-    case 78: return Phys_const::amu * 77.9204;
-    case 80: return Phys_const::amu * 79.9164;
-    case 82: return Phys_const::amu * 81.9135;
-    case 83: return Phys_const::amu * 82.9141;
-    case 84: return Phys_const::amu * 83.9115;
-    case 86: return Phys_const::amu * 85.9106;
-    default:
-      std::cerr << funame << "unknown isotope: " << _isot << "\n";
-      throw Error::Range();
-    }
-  case XENON:
-    switch(_isot) {
-    case 128: return Phys_const::amu * 127.904;
-    case 129: return Phys_const::amu * 128.905;
-    case 130: return Phys_const::amu * 129.904;
-    case 131: return Phys_const::amu * 130.905;
-    case 132: return Phys_const::amu * 131.904;
-    case 134: return Phys_const::amu * 133.905;
-    default:
-      std::cerr << funame << "unknown isotope: " << _isot << "\n";
-      throw Error::Range();
-    }
   default:
     std::cerr << funame << "unknown atomic number " << _num << "\n";
     throw Error::Range();
@@ -340,16 +324,6 @@ unsigned AtomBase::valence () const
     return 1;
   case BROMINE:
     return 1;
-  case HELIUM:
-    return 0;
-  case NEON:
-    return 0;
-  case ARGON:
-    return 0;
-  case KRYPTON:
-    return 0;
-  case XENON:
-    return 0;
   default:
     std::cerr << funame << "unknown atomic number " << _num << "\n";
     throw Error::Range();
