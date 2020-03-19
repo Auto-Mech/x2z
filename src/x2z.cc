@@ -65,14 +65,20 @@ int main(int argc, const char* argv [])
     return 1;
   }
 
+  // incipient bonds
+  //
+  std::set<std::set<int> > ib;
+  
   // auxiliary input
   //
   std::set<std::string> avail_keys;
   
   const std::string atol_key = "AngleTolerance";
+  const std::string dtol_key = "DistanceTolerance[bohr]";
   const std::string bond_key = "IncipientBond";
 
   avail_keys.insert(atol_key);
+  avail_keys.insert(dtol_key);
   avail_keys.insert(bond_key);
 
   // input cycle
@@ -92,12 +98,32 @@ int main(int argc, const char* argv [])
       
       if(dtemp <= 0.) {
 	//
-	std::cerr << funame << token << ": out of range\n";
+	std::cerr << funame << token << ": out of range: " << dtemp << "\n";
 
 	return 1;
       }
 
       angle_tolerance = dtemp;
+    }
+    // distance tolerance
+    //
+    else if(dtol_key == token) {
+      //
+      if(!(from >> dtemp)) {
+	//
+	std::cerr << funame << token << ": corrupted\n";
+	
+	return 1;
+      }
+      
+      if(dtemp <= 0. || dtemp >= 1.) {
+	//
+	std::cerr << funame << token << ": out of range: " << dtemp << "\n";
+
+	return 1;
+      }
+
+      distance_tolerance = dtemp;
     }
     // incipient bond
     //
@@ -133,7 +159,7 @@ int main(int argc, const char* argv [])
 	return 1;
       }
 
-      incipient_bond.insert(bond);
+      ib.insert(bond);
     }
     // unknown keyword
     //
@@ -154,6 +180,12 @@ int main(int argc, const char* argv [])
   
   MolecOrient mo(geom);
 
+  for(int a = 0; a < mo.size(); ++a)
+    //
+    std::cout << mo[a] << "\n";
+
+  std::cout << "\n";
+  
   std::cout << "molecule is ";
   
   if(mo.is_linear()) {
@@ -183,14 +215,14 @@ int main(int argc, const char* argv [])
 
   std::cout << "rotational symmetry number = " << mo.sym_num() << "\n\n";
 
-  PrimStruct prim(geom);
+  PrimStruct prim(geom, ib);
 
   if(!prim.is_connected()) {
     std::cout << funame << "primary structure is not connected\n";
     return 0;
   }
 
-  MolecStruct mol(prim);
+  MolecStruct mol(prim, ib);
 
   mol.print(std::cout);
 

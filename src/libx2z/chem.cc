@@ -14,8 +14,6 @@ double angle_tolerance = 5.0;
 
 double distance_tolerance = 0.05;
 
-std::set<std::set<int> > incipient_bond;
-
 bool are_angles_equal (double a1, double a2)
 {
   double da = a2 - a1;
@@ -489,11 +487,11 @@ int compare (const MolecOrient& m1, const MolecOrient& m2,
   return result;
 }
 
-PrimStruct::PrimStruct (const MolecGeom& g)
+PrimStruct::PrimStruct (const MolecGeom& g, const std::set<std::set<int> >& ib)
   //
   : ConMat<unsigned>(g.size()), MolecGeom(g), _la(g.size(), false)
 {
-  const char funame [] = "PrimStruct::PrimStruct(const MolecGeom&): ";
+  const char funame [] = "PrimStruct::PrimStruct(const MolecGeom&, const std::set<std::set<int> >&): ";
 
   typedef std::vector<Atom>::iterator mit_t;
   
@@ -518,8 +516,8 @@ PrimStruct::PrimStruct (const MolecGeom& g)
 
       bond.insert(i);
       bond.insert(j);
-      
-      if(vdistance(g[i], g[j]) < max_bond_length(g[i], g[j]) || incipient_bond.find(bond) != incipient_bond.end()) {
+
+      if(vdistance(g[i], g[j]) < max_bond_length(g[i], g[j]) || ib.find(bond) != ib.end()) {
 	//
 	(*this)(i, j) = 1;
       }
@@ -733,10 +731,10 @@ int  PrimStruct::distance (int at1, int at2) const
 
 */
 
-MolecStruct::MolecStruct (const PrimStruct& prim) 
-   : PrimStruct(prim)
+MolecStruct::MolecStruct (const PrimStruct& prim, const std::set<std::set<int> >& ib) 
+  : PrimStruct(prim)
 {
-  const char funame [] = "MolecStruct::MolecStruct(const PrimStruct&): ";
+  const char funame [] = "MolecStruct::MolecStruct(const PrimStruct&, const std::set<std::set<int> >&): ";
 
   int    itemp;
   double dtemp;
@@ -756,7 +754,7 @@ MolecStruct::MolecStruct (const PrimStruct& prim)
 	
 	bond.insert(j);
 
-	if(incipient_bond.find(bond) == incipient_bond.end())
+	if(ib.find(bond) == ib.end())
 	  //
 	  m(i, j) = 2;
       }
