@@ -17,11 +17,6 @@
 
 extern double angle_tolerance, distance_tolerance;
 
-// incipient bond
-//
-extern std::set<std::set<int> > incipient_bond;
-
-
 bool are_angles_equal (double, double);
 
 bool are_distances_equal (double, double);
@@ -90,7 +85,7 @@ class PrimStruct : public ConMat<unsigned>, private MolecGeom {
   
 public:
   //
-  explicit PrimStruct (const MolecGeom&) ;
+  PrimStruct (const MolecGeom&, const std::set<std::set<int> >&);
   
   const Atom& operator [] (int i) const { return MolecGeom::operator[](i); }
 
@@ -184,7 +179,7 @@ public:
 
   static const char* var_name (int);
 
-  explicit MolecStruct (const PrimStruct&) ;
+  MolecStruct (const PrimStruct&, const std::set<std::set<int> >&) ;
 
   int resonance_count () const { return _resonance.size(); }
 
