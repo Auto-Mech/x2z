@@ -109,24 +109,51 @@ PYBIND11_MODULE(pyx2z, module) {
         .def("is_linear", &MolecOrient::is_linear)
         .def("size", &MolecOrient::size);
     py::class_<PrimStruct>(module, "PrimStruct")
-        .def(py::init<const MolecGeom&>())
+        .def(
+            py::init(
+                [](const MolecGeom& mg, std::list<std::list<int>> ibs) {
+                    std::set<std::set<int>> _ibs({});
+                    for (auto ib : ibs) {
+                        std::set<int> b;
+                        std::copy(ib.begin(), ib.end(),
+                                  std::inserter(b, b.end()));
+                        _ibs.insert(b);
+                    }
+                    PrimStruct ps(mg, _ibs);
+                    return ps;
+                }
+            )
+        )
         .def("connected_group", &PrimStruct::connected_group)
         .def("group_stoicheometry", &PrimStruct::group_stoicheometry)
         .def("is_connected",
              (bool (PrimStruct::*)(int, int) const)
              &PrimStruct::is_connected);
     py::class_<MolecStruct>(module, "MolecStruct")
-        .def(py::init<const PrimStruct&>())
+        .def(
+            py::init(
+                [](const MolecGeom& mg, std::list<std::list<int>> ibs) {
+                    std::set<std::set<int>> _ibs({});
+                    for (auto ib : ibs) {
+                        std::set<int> b;
+                        std::copy(ib.begin(), ib.end(),
+                                  std::inserter(b, b.end()));
+                        _ibs.insert(b);
+                    }
+                    PrimStruct ps(mg, _ibs);
+                    MolecStruct ms(ps, _ibs);
+                    return ms;
+                }
+            )
+        )
+        .def(py::init<const PrimStruct&, const std::set<std::set<int> >&>())
         .def("size", [](MolecStruct& m) { return m.size(); })
         .def("atom_ordering", &MolecStruct::atom_ordering)
         .def("rotation_bond", &MolecStruct::rotation_bond)
         .def("resonance_averaged_bond_order",
              (double (MolecStruct::*)(int, int) const)
              &MolecStruct::bond_order)
-        .def("bond_order",
-             (unsigned (MolecStruct::*)(int, int, int) const)
-             &MolecStruct::bond_order)
-        // .def("resonance_count", &MolecStruct::resonance_count)
+        .def("resonance_count", &MolecStruct::resonance_count)
         .def("is_radical", &MolecStruct::is_radical);
     module.def("zmatrix_string", &zmatrix_string);
     module.def("rotational_bond_coordinates", &rotational_bond_coordinates);
