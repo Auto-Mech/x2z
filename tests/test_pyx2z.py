@@ -106,7 +106,7 @@ def test__PrimStruct_is_connected():
               (-0.2816025626, 2.3683550357, 0.0000000000),
               (-1.5749323743, 3.2380324089, -0.2828764736)]
     m = _molec_geom_obj(asymbs, coords)
-    p = pyx2z.PrimStruct(m)
+    p = pyx2z.PrimStruct(m, [[0, 1]])
     assert p.is_connected(0, 0) is True
     assert p.is_connected(0, 1) is True
     assert p.is_connected(0, 2) is True
@@ -126,7 +126,7 @@ def test__PrimStruct_connected_group():
               (-0.2816025626, 2.3683550357, 0.0000000000),
               (-1.5749323743, 3.2380324089, -0.2828764736)]
     m = _molec_geom_obj(asymbs, coords)
-    p = pyx2z.PrimStruct(m)
+    p = pyx2z.PrimStruct(m, [[0, 1]])
     assert p.connected_group() == [[2, 0, 1]]
 
 
@@ -145,7 +145,7 @@ def test__PrimStruct_group_stoicheometry():
               (-3.1380484986, 4.2227540733, -1.4866301464),
               (-4.1233452839, 4.0204635187, -0.0028769813)]
     m = _molec_geom_obj(asymbs, coords)
-    p = pyx2z.PrimStruct(m)
+    p = pyx2z.PrimStruct(m, [])
     assert p.group_stoicheometry([5, 2, 3, 4]) == 'C1H3'
     assert p.group_stoicheometry([9, 6, 7, 8]) == 'C1H3'
     assert p.group_stoicheometry([5, 2, 0, 1, 3, 4]) == 'C2H3O1'
@@ -160,12 +160,12 @@ def test__MolecStruct_size():
               (-0.2816025626, 2.3683550357, 0.0000000000),
               (-1.5749323743, 3.2380324089, -0.2828764736)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.size() == 3
     asymbs = ['H']
     coords = [(0., 0., 0.)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.size() == 1
 
 
@@ -177,7 +177,7 @@ def test__MolecStruct_resonance_averaged_bond_order():
               (-0.2816025626, 2.3683550357, 0.0000000000),
               (-1.5749323743, 3.2380324089, -0.2828764736)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.resonance_averaged_bond_order(0, 1) == 1.
     assert s.resonance_averaged_bond_order(0, 2) == 1.
     assert s.resonance_averaged_bond_order(1, 2) == 0.
@@ -190,13 +190,13 @@ def test__MolecStruct_is_radical():
     coords = [(-1.2516025626, 2.3683550357, 0.0000000000),
               (-1.5749323743, 3.2380324089, -0.2828764736)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.is_radical(0) is True
     assert s.is_radical(1) is False
     asymbs = ['H']
     coords = [(0., 0., 0.)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.is_radical(0) is True
 
 
@@ -215,7 +215,7 @@ def test__MolecStruct_rotation_bond():
               (-3.1380484986, 4.2227540733, -1.4866301464),
               (-4.1233452839, 4.0204635187, -0.0028769813)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
 
     assert s.rotation_bond() == {4: [[0, 9, 6, 1, 7, 8], [2, 5, 3, 4]],
                                  7: [[6, 9, 7, 8], [0, 5, 2, 1, 3, 4]]}
@@ -236,7 +236,7 @@ def test__MolecStruct_atom_ordering():
               (-3.1380484986, 4.2227540733, -1.4866301464),
               (-4.1233452839, 4.0204635187, -0.0028769813)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.atom_ordering() == [0, 1, 2, 6, 3, 4, 5, 7, 8, 9]
 
 
@@ -253,28 +253,8 @@ def test__MolecStruct_resonance_count():
               (0.53167, 0.14904, 0.94292),
               (2.97493, -0.03212, -0.93001)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     assert s.resonance_count() == 2
-
-
-def test__MolecStruct_bond_order():
-    """ test pyx2z.MolecStruct.bond_order()
-    """
-    asymbs = ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H']
-    coords = [(1.10206, 0.05263, 0.02517),
-              (2.44012, 0.03045, 0.01354),
-              (3.23570, 0.06292, 1.20436),
-              (2.86296, -0.38925, 2.11637),
-              (4.29058, 0.30031, 1.12619),
-              (0.54568, -0.01805, -0.90370),
-              (0.53167, 0.14904, 0.94292),
-              (2.97493, -0.03212, -0.93001)]
-    m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
-    assert s.bond_order(0, 1, 0) == 2
-    assert s.bond_order(1, 2, 0) == 1
-    assert s.bond_order(0, 1, 1) == 1
-    assert s.bond_order(1, 2, 1) == 2
 
 
 def test__zmatrix_string():
@@ -292,7 +272,7 @@ def test__zmatrix_string():
               (-3.1380484986, 4.2227540733, -1.4866301464),
               (-4.1233452839, 4.0204635187, -0.0028769813)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     string = pyx2z.zmatrix_string(s)
     print(string)
 
@@ -312,7 +292,7 @@ def test__rotational_bond_coordinates():
               (-3.1380484986, 4.2227540733, -1.4866301464),
               (-4.1233452839, 4.0204635187, -0.0028769813)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     coords = pyx2z.rotational_bond_coordinates(s)
     assert coords == ['D4', 'D7']
 
@@ -333,7 +313,7 @@ def test__rotational_group_indices():
               (-0.179317, 1.412994, 0.600234),
               (0.122085, -0.050093, 1.539995)]
     m = _molec_geom_obj(asymbs, coords)
-    s = pyx2z.MolecStruct(pyx2z.PrimStruct(m))
+    s = pyx2z.MolecStruct(m, [])
     indices = pyx2z.rotational_group_indices(s)
     print(indices)
 
@@ -354,13 +334,17 @@ def _atom_obj(asymb, xyz):
 
 
 if __name__ == '__main__':
-    # test__MolecStruct_resonance_count()
-    # test__MolecStruct_bond_order()
-    # test__MolecStruct_size()
-    # test__MolecStruct_is_radical()
+    test__PrimStruct_is_connected()
+    test__PrimStruct_connected_group()
+    test__PrimStruct_group_stoicheometry()
+    test__MolecStruct_size()
+    test__MolecStruct_resonance_averaged_bond_order()
+    test__MolecStruct_is_radical()
+    test__MolecStruct_rotation_bond()
+    test__MolecStruct_atom_ordering()
+    test__MolecStruct_resonance_count()
     # test__zmatrix_string()
     # test__rotational_bond_coordinates()
     # test__rotational_group_indices()
-    # test__MolecStruct_rotation_bond()
-    test__MolecOrient_sym_num()
-    test__MolecOrient_is_enantiomer()
+    # test__MolecOrient_sym_num()
+    # test__MolecOrient_is_enantiomer()
