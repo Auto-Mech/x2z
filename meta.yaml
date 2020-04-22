@@ -1,7 +1,7 @@
 # cmd: conda build .
 package:
     name: x2z
-    version: 0.2.0
+    version: 0.2.2
 
 source:
     path: .

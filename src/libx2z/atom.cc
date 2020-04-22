@@ -17,7 +17,7 @@ double atomic_radius (const AtomBase& a)
     //
   case AtomBase::HYDROGEN:
     //
-    return .25;
+    return 0.36;
     
   case AtomBase::CARBON:
     //
