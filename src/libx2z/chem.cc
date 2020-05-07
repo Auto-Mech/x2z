@@ -42,7 +42,7 @@ double max_bond_length(const AtomBase& a1, const AtomBase& a2)
 {
   double res = atomic_radius(a1) + atomic_radius(a2);
 
-  return 1.2 * res / Phys_const::bohr;
+  return 1.3 * res / Phys_const::bohr;
 }
 
 void MolecGeom::operator *= (const D3::Matrix& r)
