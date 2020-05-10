@@ -1,0 +1,49 @@
+version: 2
+jobs:
+    build-and-test:
+        docker:
+            - image: continuumio/miniconda3
+        steps:
+          - checkout
+          - run:
+              name: Create conda environment
+              command: |
+                  apt-get update --yes
+                  apt-get install --yes build-essential
+                  conda env create -f environment.yml
+          - run:
+              name: Build the code
+              command: |
+                  source activate x2z-env
+                  bash debug/build.sh
+          - run:
+              name: Test the x2z code
+              command: |
+                  source activate x2z-env
+                  . debug/fake-install.sh
+                  cd examples/
+                  x2z abstr.xyz
+                  x2z allene.xyz
+                  x2z c2h3.xyz
+                  x2z c3h5.xyz
+                  x2z ccc.xyz
+                  x2z ch4.xyz
+                  x2z h2co.xyz
+                  x2z n2.xyz
+                  cd ts/
+                  x2z alkoxy.xyz
+                  x2z ch2o+oh.xyz
+                  x2z core.69204
+                  x2z egdn.xyz
+                  x2z hnco+oh.xyz
+                  cd ../..
+          - run:
+              name: Test the pyx2z code
+              command: |
+                  source activate x2z-env
+                  pytest -v pyx2z_tests
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-and-test
