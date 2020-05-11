@@ -41,7 +41,7 @@ jobs:
               name: Test the pyx2z code
               command: |
                   source activate x2z-env
-                  pytest -v pyx2z_tests
+                  pytest -v pytests
 workflows:
     version: 2
     build-all:
