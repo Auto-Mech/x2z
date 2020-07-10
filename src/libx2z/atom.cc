@@ -21,43 +21,46 @@ double atomic_radius (const AtomBase& a)
     
   case AtomBase::CARBON:
     //
-    return 0.7;
+    return 0.70;
+    // return 0.75;  // from yg
 
   case AtomBase::NITROGEN:
     //
     return 0.65;
+    // return 0.70;  // from yg
     
   case AtomBase::OXYGEN:
     //
-    return 0.6;
+    return 0.65;
     
   case AtomBase::FLUORINE:
     //
-    return 0.5;
+    return 0.50;
+    // return 0.60;  // from yg
     
   case AtomBase::SODIUM:
     //
-    return 1.8;
+    return 1.80;
 
   case AtomBase::SILICON:
     //
-    return 1.1;
+    return 1.10;
     
   case AtomBase::PHOSPHORUS:
     //
-    return 1.;
+    return 1.00;
     
   case AtomBase::SULFUR:
     //
-    return 1.;
+    return 1.00;
     
   case AtomBase::CHLORINE:
     //
-    return 1.;
+    return 1.00;
     
   case AtomBase::TITANIUM:
     //
-    return 1.4;
+    return 1.40;
     
   case AtomBase::BROMINE:
     //
@@ -386,7 +389,4 @@ void Atom::_read (std::istream& from)
       throw Error::Form();
     }
 }
-
-
-
 
