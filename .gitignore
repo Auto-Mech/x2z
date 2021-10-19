@@ -37,4 +37,7 @@ build
 bin
 lib
 __pycache__
-debug/
+
+# Builds
+build
+debug
