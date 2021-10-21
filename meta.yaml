@@ -1,27 +1,32 @@
-# cmd: conda build .
+# cmd: conda build . -c conda-forge
 package:
     name: x2z
-    version: 0.2.2
+    version: 0.3.0
 
 source:
     path: .
 
 requirements:
     build:
-        - python
-        - pybind11
-        - cmake
-        - {{ compiler('c') }}
-        - {{ compiler('cxx') }}
-        - numpy
-        - pytest
+        # - conda-forge::python=3.9
+        # - conda-forge::numpy=1.21.2
+        - conda-forge::python=3.7
+        - conda-forge::numpy=1.15.4
+        - conda-forge::pybind11
+        - conda-forge::pytest
+        - conda-forge::cmake=3.21.3
+        - conda-forge::gcc_linux-64=7.5.0
+        - conda-forge::gxx_linux-64=7.5.0
     host:
-        - python
+        # - conda-forge::python=3.9
+        - conda-forge::python=3.7
     run:
-        - python
-        - pybind11
-        - cmake
-        - {{ compiler('c') }}
-        - {{ compiler('cxx') }}
-        - numpy
-        - pytest
+        # - conda-forge::python=3.9
+        # - conda-forge::numpy=1.21.2
+        - conda-forge::python=3.7
+        - conda-forge::numpy=1.15.4
+        - conda-forge::pybind11
+        - conda-forge::pytest
+        - conda-forge::cmake=3.21.3
+        - conda-forge::gcc_linux-64=7.5.0
+        - conda-forge::gxx_linux-64=7.5.0
