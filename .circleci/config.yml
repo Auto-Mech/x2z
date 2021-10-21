@@ -28,8 +28,7 @@ jobs:
                   x2z ch4.xyz
                   x2z h2co.xyz
                   x2z n2.xyz
-                  cd ..
-                  cd ts/
+                  cd ts
                   x2z alkoxy.xyz
                   x2z ch2o+oh.xyz
                   x2z egdn.xyz
