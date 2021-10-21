@@ -8,20 +8,20 @@ source:
 
 requirements:
     build:
-        - conda-forge::python=3.10
+        - conda-forge::python=3.9
         - conda-forge::pybind11
         - conda-forge::numpy=1.21.2
         - conda-forge::pytest
         - conda-forge::cmake=3.21.3
-        - conda-forge::gcc_linux-64=11.2.0
-        - conda-forge::gxx_linux-64=11.2.0
+        - conda-forge::gcc_linux-64=7.5.0
+        - conda-forge::gxx_linux-64=7.5.0
     host:
-        - conda-forge::python=3.10
+        - conda-forge::python=3.9
     run:
-        - conda-forge::python=3.10
+        - conda-forge::python=3.9
         - conda-forge::pybind11
         - conda-forge::numpy=1.21.2
         - conda-forge::pytest
         - conda-forge::cmake=3.21.3
-        - conda-forge::gcc_linux-64=11.2.0
-        - conda-forge::gxx_linux-64=11.2.0
+        - conda-forge::gcc_linux-64=7.5.0
+        - conda-forge::gxx_linux-64=7.5.0
