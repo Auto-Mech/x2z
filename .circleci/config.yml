@@ -15,12 +15,11 @@ jobs:
               name: Build the code
               command: |
                   source activate x2z-env
-                  bash debug/build.sh
+                  bash build.sh
           - run:
               name: Test the x2z code
               command: |
                   source activate x2z-env
-                  . debug/fake-install.sh
                   cd examples/
                   x2z allene.xyz
                   x2z c2h3.xyz
@@ -29,6 +28,7 @@ jobs:
                   x2z ch4.xyz
                   x2z h2co.xyz
                   x2z n2.xyz
+                  cd ..
                   cd ts/
                   x2z alkoxy.xyz
                   x2z ch2o+oh.xyz
