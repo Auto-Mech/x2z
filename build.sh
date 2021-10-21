@@ -11,4 +11,4 @@ make install
 cd ..
 mv build/*.so .
 
-$PYTHON setup.py install
+python setup.py install
