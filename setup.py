@@ -7,7 +7,7 @@ from distutils.core import setup
 
 
 setup(name="pyx2z",
-      version="0.3.0",
+      version="0.3.1",
       packages=[''],
       package_dir={'': '.'},
       package_data={'': ["pyx2z*.so"]},)
